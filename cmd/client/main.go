@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -23,22 +24,29 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
+	const desiredConnectionsCnt = 1000
+
+	connectedCnt := int64(0)
+
 	startTime := time.Now()
 
-	for i := 0; i < 1000; i++ {
-		err := connect(ctx, "localhost:50051", logger)
-		if err != nil {
-			_ = level.Error(logger).Log("err", fmt.Errorf("connect, err: %w", err))
-			return
-		}
+	for i := 0; i < desiredConnectionsCnt; i++ {
+		go func() {
+			err := connect(ctx, "localhost:50051", logger)
+			if err != nil {
+				_ = level.Error(logger).Log("err", fmt.Errorf("connect, err: %w", err))
+				return
+			}
+
+			atomic.AddInt64(&connectedCnt, 1)
+			if connectedCnt % (desiredConnectionsCnt / 10) == 0 {
+				deltaDuration := time.Now().Sub(startTime)
+
+				msg := fmt.Sprintf("established connections: %d, took: %d ms", connectedCnt, deltaDuration)
+				_ = level.Info(logger).Log("mgs", msg)
+			}
+		}()
 	}
-
-	endTime := time.Now()
-
-	deltaDuration := endTime.Sub(startTime)
-
-	msg := fmt.Sprintf("all connections have been established, it took: %d ms", deltaDuration.Milliseconds())
-	_ = level.Info(logger).Log("msg", msg)
 
 	// Just hang the process (not bothering with proper termination for now).
 	select {}
