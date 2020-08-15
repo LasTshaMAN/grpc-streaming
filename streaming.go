@@ -23,12 +23,9 @@ type DataStorage interface {
 	Set(ctx context.Context, url string, data string, ttl time.Duration) error
 }
 
-// DistributedLock is a lock that resides somewhere outside of the process this service is running in,
-// it is used to synchronize access to some resource between several processes
-// (not just go-routines withing this process) running concurrently.
-type DistributedLock interface {
-	// Lock acquires lock.
-	Lock() error
-	// Unlock previously acquired lock.
-	Unlock() (bool, error)
+type Locker interface {
+	// Lock acquires a lock (associated with the provided url).
+	Lock(url string) error
+	// Unlock previously acquired lock (associated with the provided url).
+	Unlock(url string) (bool, error)
 }

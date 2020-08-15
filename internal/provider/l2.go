@@ -17,21 +17,21 @@ type L2 struct {
 
 	storage streaming.DataStorage
 
-	lock     streaming.DistributedLock
+	locker    streaming.Locker
 	fallback streaming.DataProvider
 }
 
 func NewL2(
 	logger log.Logger,
 	storage streaming.DataStorage,
-	lock streaming.DistributedLock,
+	locker streaming.Locker,
 	fallback streaming.DataProvider,
 ) *L2 {
 	return &L2{
 		logger:   logger,
 		storage:  storage,
 		fallback: fallback,
-		lock:     lock,
+		locker:     locker,
 	}
 }
 
@@ -48,16 +48,14 @@ func (srv *L2) Get(ctx context.Context, url string) (data string, ttl time.Durat
 		return "", 0, fmt.Errorf("get data from storage, err: %w", err)
 	}
 
-	// TODO
-	// Split lock by URL
-	err = srv.lock.Lock()
+	err = srv.locker.Lock(url)
 	if err != nil {
-		return "", 0, fmt.Errorf("acquire lock, err: %w", err)
+		return "", 0, fmt.Errorf("lock locker, err: %w", err)
 	}
 	defer func() {
-		success, unlockErr := srv.lock.Unlock()
+		success, unlockErr := srv.locker.Unlock(url)
 		if unlockErr != nil {
-			_ = level.Error(srv.logger).Log("err", fmt.Errorf("release lock, err: %w", unlockErr))
+			_ = level.Error(srv.logger).Log("err", fmt.Errorf("unlock locker, err: %w", unlockErr))
 			return
 		}
 		if !success {

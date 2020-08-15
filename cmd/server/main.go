@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/go-redsync/redsync"
 	"github.com/go-resty/resty/v2"
 	"google.golang.org/grpc"
 
@@ -49,6 +48,8 @@ func main() {
 		redisIdleConnTimeout = 10 * time.Minute
 
 		l2CodeExecutionUpperEstimate = time.Second
+
+		lockerSize = 100
 	)
 
 	redisClient := redis.NewClient(
@@ -70,20 +71,21 @@ func main() {
 
 	redisStorage := redis.NewStorage(redisClient)
 
-	// We need to make sure distributed lock won't expire before the protected section of code will finish.
-	// Also, we don't want distributed lock to be held longer than necessary (cause that might affect service availability).
+	// We need to make sure distributed lock won't expire before the protected section of code finishes its execution.
+	// Also, we don't want distributed lock to be held for longer than necessary (cause that might affect service availability).
+	// Thus, we are defining dLockExpiry below based on these considerations.
 	dLockExpiry :=  l2CodeExecutionUpperEstimate +
 		redisDialTimeout + redisRequestTimeout +
 		l3RequestTimeout +
 		redisDialTimeout + redisRequestTimeout
 
-	distributedLock := redsync.New([]redsync.Pool{redisClient}).NewMutex("some mutex", redsync.SetExpiry(dLockExpiry))
+	locker := redis.NewLocker(lockerSize, dLockExpiry, redisClient)
 
 	l3Client := resty.NewWithClient(&http.Client{Timeout: l3RequestTimeout})
 
 	l3Provider := provider.NewL3(cfg.MinTimeout, cfg.MaxTimeout, l3Client, l3CircuitBreakerTimeout)
 
-	l2Provider := provider.NewL2(logger, redisStorage, distributedLock, l3Provider)
+	l2Provider := provider.NewL2(logger, redisStorage, locker, l3Provider)
 
 	//inmemStorage :=
 	//

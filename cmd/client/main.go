@@ -42,7 +42,7 @@ func main() {
 			if connectedCnt % (desiredConnectionsCnt / 10) == 0 {
 				deltaDuration := time.Now().Sub(startTime)
 
-				msg := fmt.Sprintf("established connections: %d, took: %d ms", connectedCnt, deltaDuration)
+				msg := fmt.Sprintf("established connections: %d, took: %d ms", connectedCnt, deltaDuration.Milliseconds())
 				_ = level.Info(logger).Log("mgs", msg)
 			}
 		}()
