@@ -39,7 +39,9 @@ func main() {
 	}
 
 	const (
-		l3ClientRequestTimeout = 5 * time.Second
+		l3RequestTimeout      = 5 * time.Second
+		l3CircuitBreakerTimeout = 60 * time.Second
+
 
 		redisConnCount = 16
 		redisDialTimeout = time.Second
@@ -72,20 +74,20 @@ func main() {
 	// Also, we don't want distributed lock to be held longer than necessary (cause that might affect service availability).
 	dLockExpiry :=  l2CodeExecutionUpperEstimate +
 		redisDialTimeout + redisRequestTimeout +
-		l3ClientRequestTimeout +
+		l3RequestTimeout +
 		redisDialTimeout + redisRequestTimeout
 
 	distributedLock := redsync.New([]redsync.Pool{redisClient}).NewMutex("some mutex", redsync.SetExpiry(dLockExpiry))
 
-	l3Client := resty.NewWithClient(&http.Client{Timeout: l3ClientRequestTimeout})
+	l3Client := resty.NewWithClient(&http.Client{Timeout: l3RequestTimeout})
 
-	l3Provider := provider.NewL3(cfg.MinTimeout, cfg.MaxTimeout, l3Client)
+	l3Provider := provider.NewL3(cfg.MinTimeout, cfg.MaxTimeout, l3Client, l3CircuitBreakerTimeout)
 
 	l2Provider := provider.NewL2(logger, redisStorage, distributedLock, l3Provider)
 
 	//inmemStorage :=
 	//
-	//l1Provider := provider.NewL1(, l2Provider, l3ClientRequestTimeout, redisDialTimeout + redisRequestTimeout)
+	//l1Provider := provider.NewL1(, l2Provider, l3RequestTimeout, redisDialTimeout + redisRequestTimeout)
 
 	// TODO
 	//randProvider := random.NewService(cfg.URLs, l3Provider)

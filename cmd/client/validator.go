@@ -9,6 +9,7 @@ const (
 	minDataLen = 1000
 
 	mandatoryTag = "<!doctype html>"
+	errReply = "err"
 )
 
 var (
@@ -18,6 +19,10 @@ var (
 
 // ValidateReply performs some checks on data to make sure it isn't just some garbage.
 func ValidateReply(data string) error {
+	if data == errReply {
+		return nil
+	}
+
 	if len(data) < minDataLen {
 		return fmt.Errorf("data len: %d, err: %w", len(data), ErrDataLack)
 	}

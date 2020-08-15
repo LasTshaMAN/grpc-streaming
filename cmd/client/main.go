@@ -25,9 +25,7 @@ func main() {
 
 	startTime := time.Now()
 
-	// TODO
-	// Change conn number to 1000
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		err := connect(ctx, "localhost:50051", logger)
 		if err != nil {
 			_ = level.Error(logger).Log("err", fmt.Errorf("connect, err: %w", err))

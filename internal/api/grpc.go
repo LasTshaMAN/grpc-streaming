@@ -36,7 +36,8 @@ func (srv *Server) GetRandomDataStream(
 		data, err := srv.provider.GetNext(stream.Context())
 		if err != nil {
 			_ = level.Error(srv.logger).Log("err", fmt.Errorf("get next random data, err: %w", err))
-			continue
+
+			data = "err"
 		}
 		resp := &gengrpc.Response{
 			Reply: data,

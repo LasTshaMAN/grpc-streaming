@@ -1,3 +1,4 @@
+// Package streaming describes the domain model for this service.
 package streaming
 
 import (
@@ -10,6 +11,7 @@ type RandomDataProvider interface {
 }
 
 type DataProvider interface {
+	// Get returns data by url, with a certain ttl (time to live) duration after which this data is considered to be stale.
 	Get(ctx context.Context, url string) (data string, ttl time.Duration, err error)
 }
 

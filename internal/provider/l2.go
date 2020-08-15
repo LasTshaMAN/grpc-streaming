@@ -41,6 +41,9 @@ func (srv *L2) Get(ctx context.Context, url string) (data string, ttl time.Durat
 		return data, ttl, nil
 	}
 
+	// TODO
+	// Handle ErrDataCurrentlyUnavailable in L2
+
 	if !errors.Is(err, streaming.ErrDataNotFoundInStorage) {
 		return "", 0, fmt.Errorf("get data from storage, err: %w", err)
 	}

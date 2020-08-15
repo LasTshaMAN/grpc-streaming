@@ -6,7 +6,7 @@ Table of contents:
 TODO
 - [Dependencies](#dependencies)
 - [How to run](#how-to-run)
-- [Things yet to be done](#things-yet-to-be-done-sorted-by-priority-)
+- [Things yet to be done](#things-yet-to-be-done-)
 
 This project is an experimental ground for GRPC streaming.
 
@@ -28,9 +28,10 @@ and [this comment](https://github.com/grpc/grpc.io/issues/298#issuecomment-65676
 
 TODO
 
-### Things yet to be done (sorted by priority) ...
+### Things yet to be done ...
 - overall architecture documentation
 - metrics
-- extend unit-test coverage
+- extend unit-test coverage (especially for edge and error cases)
 - tracing
+- move all the settings (such as timeouts, amount of connections, locks, ...) in the configuration file
 - setup CI/CD

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/LasTshaMAN/streaming"
@@ -13,7 +12,6 @@ import (
 type L1 struct {
 	storage streaming.DataStorage
 
-	lock     sync.Locker
 	fallback streaming.DataProvider
 
 	// fallbackRoundTripTime is an upper estimate on the time it takes to fetch data from fallback provider.
@@ -47,34 +45,21 @@ func NewL1(
 	}
 }
 
+// If this implementation proves to be too slow,
+// one way to try speed it up would be to synchronize access to Redis through a lock,
+// or rather through a bunch of locks (based on url hashing maybe).
 func (srv *L1) Get(ctx context.Context, url string) (string, time.Duration, error) {
 	data, ttl, err := srv.storage.Get(ctx, url)
 	if err == nil {
 		return data, ttl, nil
 	}
 
+	// TODO
+	// Handle ErrDataCurrentlyUnavailable in L1
+
 	if !errors.Is(err, streaming.ErrDataNotFoundInStorage) {
 		return "", 0, fmt.Errorf("get data from storage, err: %w", err)
 	}
-
-	// TODO
-	// Split lock by URL
-	srv.lock.Lock()
-	defer srv.lock.Unlock()
-
-	// Check once again whether data is in storage, since somebody must have put it there already while we
-	// were performing "the fast scenario" (a piece of code above).
-
-	data, ttl, err = srv.storage.Get(ctx, url)
-	if err == nil {
-		return data, ttl, nil
-	}
-
-	if !errors.Is(err, streaming.ErrDataNotFoundInStorage) {
-		return "", 0, fmt.Errorf("get data from storage (under lock), err: %w", err)
-	}
-
-	// At this point its our job to fetch the data from fallback provider and cache it in our storage.
 
 	data, ttl, err = srv.fallback.Get(ctx, url)
 	if err != nil {
