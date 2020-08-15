@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "./gen/grpc";
+
+service StreamingService {
+  rpc GetRandomDataStream(Request) returns (stream Response);
+}
+
+message Request {
+}
+
+message Response {
+  string reply = 1;
+}
