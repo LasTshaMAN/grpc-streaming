@@ -15,14 +15,16 @@ test:
 mock_gen:
 
 client_run:
-	go run ./cmd/client
+	rm -f ./gen/log/client.log 2>&1
+	go run ./cmd/client >> ./gen/log/client.log 2>&1
 
 # TODO
 # Rewrite this with docker-compose
 # TODO
 # (and check how that affects throughput)
 server_run_docker:
-	go run ./cmd/server
+	rm -f ./gen/log/server.log 2>&1
+	go run ./cmd/server >> ./gen/log/server.log 2>&1
 
 proto_gen:
 	protoc \
@@ -31,9 +33,9 @@ proto_gen:
 	./streaming.proto
 
 # Spin up all the dependencies.
-deps_up:
+up_deps:
 	docker-compose -f docker/docker-compose.yml up -d --build
 
 # Shut down all the dependencies.
-deps_down:
+down_deps:
 	docker-compose -f docker/docker-compose.yml down

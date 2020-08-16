@@ -25,14 +25,17 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
-	const desiredConnectionsCnt = 1000
+	// TODO
+	const desiredConnectionsCnt = 10000
+	//const desiredConnectionsCnt = 1000
+	//const desiredConnectionsCnt = 10
 
 	// Gather some statistics to verify the solution validity, throughput, latency, ...
 	var (
 		replySuccessCnt = int64(0)
 		replyFailureCnt = int64(0)
 
-		connectedCnt = int64(0)
+		conntectAttemptsCnt = int64(0)
 
 		startTime = time.Now()
 
@@ -43,10 +46,11 @@ func main() {
 		wg.Add(1)
 
 		go func() {
+			defer wg.Done()
+
 			replySuccess, err := connect(ctx, "localhost:50051", logger)
 			if err != nil {
 				_ = level.Error(logger).Log("err", fmt.Errorf("connect, err: %w", err))
-				return
 			}
 
 			if replySuccess {
@@ -55,22 +59,28 @@ func main() {
 				atomic.AddInt64(&replyFailureCnt, 1)
 			}
 
-			atomic.AddInt64(&connectedCnt, 1)
-			if connectedCnt%(desiredConnectionsCnt/10) == 0 {
+			atomic.AddInt64(&conntectAttemptsCnt, 1)
+			if conntectAttemptsCnt%(desiredConnectionsCnt/10) == 0 {
 				deltaDuration := time.Now().Sub(startTime)
 
-				msg := fmt.Sprintf("established connections: %d, took: %d ms", connectedCnt, deltaDuration.Milliseconds())
+				msg := fmt.Sprintf("connect attempts: %d, took: %d ms", conntectAttemptsCnt, deltaDuration.Milliseconds())
 				_ = level.Info(logger).Log("mgs", msg)
 			}
-
-			wg.Done()
 		}()
 	}
 
 	// Wait for all the reply success/failure data be gathered.
 	wg.Wait()
 
-	_ = level.Info(logger).Log("mgs", fmt.Sprintf("reply results, success: %d, failure: %d", replySuccessCnt, replyFailureCnt))
+	deltaDuration := time.Now().Sub(startTime)
+
+	msg := fmt.Sprintf(
+		"reply results, success: %d, failure: %d, took: %d ms",
+		replySuccessCnt,
+		replyFailureCnt,
+		deltaDuration.Milliseconds(),
+	)
+	_ = level.Info(logger).Log("mgs", msg)
 
 	// Just hang the process (not bothering with proper termination for now).
 	select {}
@@ -80,8 +90,6 @@ func main() {
 // before returning this func spawns a background worker to handle the data stream coming on this connection.
 // This background worker terminates upon a first error encountered.
 func connect(ctx context.Context, target string, logger log.Logger) (firstReplySuccess bool, err error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-
 	conn, err := grpc.DialContext(ctx, target, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return false, fmt.Errorf("dial target, err: %w", err)
@@ -114,8 +122,6 @@ func connect(ctx context.Context, target string, logger log.Logger) (firstReplyS
 			_ = level.Error(logger).Log("err", fmt.Errorf("receive data from stream, err: %w", closeErr))
 			return
 		}
-
-		cancel()
 	}()
 
 	const errReply = "err"

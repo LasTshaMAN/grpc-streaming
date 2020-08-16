@@ -2,6 +2,7 @@ package internet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -46,7 +47,10 @@ func (srv *Provider) Get(_ context.Context, url string) (string, time.Duration, 
 
 	resp, err := srv.client.R().Get(url)
 	if err != nil {
-		_ = level.Error(srv.logger).Log("err", fmt.Errorf("get data from URL: %s, err: %w", url, err))
+		// We are not interested in logging context.DeadlineExceeded errors (metrics will better represent these errors).
+		if !errors.Is(err, context.DeadlineExceeded) {
+			_ = level.Error(srv.logger).Log("err", fmt.Errorf("get data from URL: %s, err: %w", url, err))
+		}
 
 		return "", srv.dataUnavailablePeriod, streaming.ErrDataCurrentlyUnavailable
 	}

@@ -34,4 +34,5 @@ TODO
 - extend unit-test coverage (especially for edge and error cases)
 - tracing
 - move all the settings (such as timeouts, amount of connections, locks, ...) in the configuration file
+- customize timeouts according to our needs
 - setup CI/CD

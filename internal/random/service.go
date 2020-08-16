@@ -2,8 +2,7 @@ package random
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
+	"time"
 
 	"github.com/LasTshaMAN/streaming"
 )
@@ -21,14 +20,18 @@ func NewService(urls []string, provider streaming.DataProvider) *Service {
 }
 
 func (srv *Service) GetNext(ctx context.Context) (string, error) {
-	idx := rand.Intn(len(srv.urls))
+	// TODO
+	time.Sleep(time.Hour)
+	return "some data", nil
 
-	url := srv.urls[idx]
-
-	data, _, err := srv.provider.Get(ctx, url)
-	if err != nil {
-		return "", fmt.Errorf("get url, err: %w", err)
-	}
-
-	return data, nil
+	//idx := rand.Intn(len(srv.urls))
+	//
+	//url := srv.urls[idx]
+	//
+	//data, _, err := srv.provider.Get(ctx, url)
+	//if err != nil {
+	//	return "", fmt.Errorf("get url, err: %w", err)
+	//}
+	//
+	//return data, nil
 }

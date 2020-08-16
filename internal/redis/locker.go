@@ -49,7 +49,7 @@ func (locker *Locker) getLock(url string) *redsync.Mutex {
 	_, _ = locker.hasher.WriteString(url)
 	defer locker.hasher.Reset()
 
-	hash := locker.hasher.Sum64()
+	hash := int(locker.hasher.Sum64() >> 33)
 
-	return locker.locks[hash%uint64(locker.size)]
+	return locker.locks[hash%locker.size]
 }

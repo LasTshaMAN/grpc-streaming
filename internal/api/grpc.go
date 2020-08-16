@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-kit/kit/log"
@@ -36,10 +37,13 @@ func (srv *Server) GetRandomDataStream(
 
 	for i := 0; i < 3; i++ {
 		data, err := srv.provider.GetNext(stream.Context())
-		if err != nil {
+		if err != nil && !errors.Is(err, streaming.ErrDataCurrentlyUnavailable) {
 			_ = level.Error(srv.logger).Log("err", fmt.Errorf("get next random data, err: %w", err))
 
-			data = "err"
+			data = "unexpected err"
+		}
+		if errors.Is(err, streaming.ErrDataCurrentlyUnavailable) {
+			data = "unavailable"
 		}
 		resp := &gengrpc.Response{
 			Reply: data,

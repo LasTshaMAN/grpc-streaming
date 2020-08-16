@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	minDataLen = 1000
+	minDataLen = 1
 
-	mandatoryTag = "html>"
-	errReply     = "err"
+	mandatoryTag     = "html>"
+	expectedErrReply = "unavailable"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 
 // ValidateReply performs some checks on data to make sure it isn't just some garbage.
 func ValidateReply(data string) error {
-	if data == errReply {
+	if data == expectedErrReply {
 		return nil
 	}
 

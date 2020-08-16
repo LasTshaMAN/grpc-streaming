@@ -26,7 +26,7 @@ func NewStorage(pool *redis.Pool) *Storage {
 func (storage *Storage) Get(ctx context.Context, url string) (string, time.Duration, error) {
 	conn, err := storage.pool.GetContext(ctx)
 	if err != nil {
-		return "", 0, fmt.Errorf("get context, err: %w", err)
+		return "", 0, fmt.Errorf("get Redis context, err: %w", err)
 	}
 	defer conn.Close()
 
@@ -55,7 +55,7 @@ func (storage *Storage) Get(ctx context.Context, url string) (string, time.Durat
 func (storage *Storage) Set(ctx context.Context, url string, data string, ttl time.Duration) error {
 	conn, err := storage.pool.GetContext(ctx)
 	if err != nil {
-		return fmt.Errorf("get context, err: %w", err)
+		return fmt.Errorf("get Redis context, err: %w", err)
 	}
 	defer conn.Close()
 
