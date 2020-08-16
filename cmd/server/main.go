@@ -55,8 +55,8 @@ func main() {
 		l2CodeExecutionUpperEstimate = 109 * time.Second
 
 		// TODO
-		lockerSize = 1
-		//lockerSize = 100
+		//lockerSize = 1
+		lockerSize = 100
 	)
 
 	redisClient := redis.NewClient(

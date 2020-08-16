@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	minDataLen = 1
+	minDataLen = 100
 
 	mandatoryTag     = "html>"
 	expectedErrReply = "unavailable"
@@ -24,7 +24,7 @@ func ValidateReply(data string) error {
 	}
 
 	if len(data) < minDataLen {
-		return fmt.Errorf("data len: %d, err: %w", len(data), ErrDataLack)
+		return fmt.Errorf("data: %s, err: %w", data, ErrDataLack)
 	}
 
 	if !strings.Contains(strings.ToLower(data), mandatoryTag) {

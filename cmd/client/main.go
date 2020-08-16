@@ -26,8 +26,8 @@ func main() {
 	}
 
 	// TODO
-	const desiredConnectionsCnt = 10000
-	//const desiredConnectionsCnt = 1000
+	//const desiredConnectionsCnt = 10000
+	const desiredConnectionsCnt = 1000
 	//const desiredConnectionsCnt = 10
 
 	// Gather some statistics to verify the solution validity, throughput, latency, ...
@@ -35,7 +35,7 @@ func main() {
 		replySuccessCnt = int64(0)
 		replyFailureCnt = int64(0)
 
-		conntectAttemptsCnt = int64(0)
+		connectAttemptsCnt = int64(0)
 
 		startTime = time.Now()
 
@@ -59,11 +59,11 @@ func main() {
 				atomic.AddInt64(&replyFailureCnt, 1)
 			}
 
-			atomic.AddInt64(&conntectAttemptsCnt, 1)
-			if conntectAttemptsCnt%(desiredConnectionsCnt/10) == 0 {
+			atomic.AddInt64(&connectAttemptsCnt, 1)
+			if connectAttemptsCnt%(desiredConnectionsCnt/10) == 0 {
 				deltaDuration := time.Now().Sub(startTime)
 
-				msg := fmt.Sprintf("connect attempts: %d, took: %d ms", conntectAttemptsCnt, deltaDuration.Milliseconds())
+				msg := fmt.Sprintf("connect attempts: %d, took: %d ms", connectAttemptsCnt, deltaDuration.Milliseconds())
 				_ = level.Info(logger).Log("mgs", msg)
 			}
 		}()
@@ -124,7 +124,7 @@ func connect(ctx context.Context, target string, logger log.Logger) (firstReplyS
 		}
 	}()
 
-	const errReply = "err"
+	const errReply = "unexpected err"
 
 	return resp.Reply != errReply, nil
 }

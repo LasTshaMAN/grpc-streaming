@@ -15,6 +15,7 @@ This project is an experimental ground for GRPC streaming.
 - `Golang` 1.14 or higher
 - `protoc` 3.0.0 or higher
 - `grpc plugin` for `protoc` (latest `master` version from [grpc-go](https://github.com/grpc/grpc-go) repo, see explanation below)
+- `docker-compose`
 
 To start developing with GRPC take a look at [quickstart guide](https://grpc.io/docs/languages/go/quickstart/).
 We are using `master` version of [grpc-go](https://github.com/grpc/grpc-go) repo due to some temporary issues,  
@@ -26,9 +27,33 @@ and [this comment](https://github.com/grpc/grpc.io/issues/298#issuecomment-65676
 
 ### How to run
 
-TODO
+To run linter use:
+```
+make lint_docker
+```
+
+To run unit-tests do:
+```
+# Spin up service dependencies (for example, Redis) first:
+make up_deps
+
+make test
+```
+
+To deploy [server](./cmd/server) locally with `docker-compose` do:
+```
+make run_server
+```
+
+You can also run a [client](./cmd/client) to send some requests to the server (check out [logs](./logs) to see what happens):
+```
+make run_client
+```
+
+See [Makefile](./Makefile) for the full list of available commands.
 
 ### Things yet to be done ...
+- fix linter suggestions
 - overall architecture documentation
 - metrics
 - extend unit-test coverage (especially for edge and error cases)

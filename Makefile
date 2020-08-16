@@ -5,6 +5,9 @@ format:
 	# For details see https://github.com/golang/go/issues/21476
 	gofmt -w -s ./
 
+build:
+	go build -o ./bin/server ./cmd/server/
+
 lint_docker:
 	docker run --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod:ro -v `pwd`:/`pwd`:ro -w /`pwd` golangci/golangci-lint:v1.27-alpine golangci-lint run --deadline=5m -v
 
@@ -14,17 +17,21 @@ test:
 # TODO
 mock_gen:
 
-client_run:
-	rm -f ./gen/log/client.log 2>&1
-	go run ./cmd/client >> ./gen/log/client.log 2>&1
+run_client:
+	mkdir -p log
+	rm -f ./log/client.log 2>&1
+	go run ./cmd/client >> ./log/client.log 2>&1
 
 # TODO
-# Rewrite this with docker-compose
-# TODO
-# (and check how that affects throughput)
-server_run_docker:
-	rm -f ./gen/log/server.log 2>&1
-	go run ./cmd/server >> ./gen/log/server.log 2>&1
+# (and check how docker compose affects throughput)
+run_server:
+	rm -f ./log/server.log 2>&1
+	mkdir -p log
+	docker-compose -p server -f docker/docker-compose-server.yml up -d --build
+	docker-compose -p server -f docker/docker-compose-server.yml logs -f server >> ./log/server.log 2>&1
+
+stop_server:
+	docker-compose -p server -f docker/docker-compose-server.yml down
 
 proto_gen:
 	protoc \
@@ -34,8 +41,8 @@ proto_gen:
 
 # Spin up all the dependencies.
 up_deps:
-	docker-compose -f docker/docker-compose.yml up -d --build
+	docker-compose -p deps -f docker/docker-compose-deps.yml up -d
 
 # Shut down all the dependencies.
 down_deps:
-	docker-compose -f docker/docker-compose.yml down
+	docker-compose -p deps -f docker/docker-compose-deps.yml down

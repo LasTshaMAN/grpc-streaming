@@ -1,0 +1,10 @@
+version: '3'
+services:
+  server:
+    build:
+      context: ./..
+      dockerfile: ./docker/server.Dockerfile
+    command: ./bin/server
+    network_mode: "host"
+    ports:
+      - "50051:50051"
