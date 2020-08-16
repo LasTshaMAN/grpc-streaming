@@ -8,8 +8,8 @@ import (
 const (
 	minDataLen = 1000
 
-	mandatoryTag = "<!doctype html>"
-	errReply = "err"
+	mandatoryTag = "html>"
+	errReply     = "err"
 )
 
 var (

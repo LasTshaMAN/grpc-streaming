@@ -17,6 +17,10 @@ type RandomDataProvider interface {
 // Data providers can be layered on top of each other so that faster ones can serve as caches for slower ones.
 type DataProvider interface {
 	// Get returns data defined by url, with a certain ttl (time to live) duration after which this data is considered to be stale.
+	//
+	// When ErrDataCurrentlyUnavailable is returned, ttl might have non-zero value,
+	// in this case provider will continue to return ErrDataCurrentlyUnavailable for ttl duration
+	// basically allowing for caching ErrDataCurrentlyUnavailable.
 	Get(ctx context.Context, url string) (data string, ttl time.Duration, err error)
 }
 
@@ -30,7 +34,7 @@ type DataStorage interface {
 }
 
 // Locker manages locks each of which is identified by a URL.
-// 
+//
 // For every two URLs && url1 == url2 Locker methods must operate on the same lock,
 // but when url1 != url2, Locker might or might not operate on the same lock (it is up to the implementation).
 type Locker interface {

@@ -17,7 +17,7 @@ type L2 struct {
 
 	storage streaming.DataStorage
 
-	locker    streaming.Locker
+	locker   streaming.Locker
 	fallback streaming.DataProvider
 }
 
@@ -31,7 +31,7 @@ func NewL2(
 		logger:   logger,
 		storage:  storage,
 		fallback: fallback,
-		locker:     locker,
+		locker:   locker,
 	}
 }
 

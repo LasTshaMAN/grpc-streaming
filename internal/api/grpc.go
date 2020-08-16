@@ -2,8 +2,10 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+
 	"github.com/LasTshaMAN/streaming"
 	gengrpc "github.com/LasTshaMAN/streaming/gen/grpc"
 )
@@ -20,7 +22,7 @@ type Server struct {
 
 func NewServer(logger log.Logger, randReqNumber int, provider streaming.RandomDataProvider) *Server {
 	return &Server{
-		logger: logger,
+		logger:        logger,
 		randReqNumber: randReqNumber,
 		provider:      provider,
 	}

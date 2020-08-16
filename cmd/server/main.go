@@ -15,9 +15,8 @@ import (
 	gengrpc "github.com/LasTshaMAN/streaming/gen/grpc"
 	"github.com/LasTshaMAN/streaming/internal/api"
 	"github.com/LasTshaMAN/streaming/internal/config"
-	"github.com/LasTshaMAN/streaming/internal/provider"
+	"github.com/LasTshaMAN/streaming/internal/internet"
 	"github.com/LasTshaMAN/streaming/internal/random"
-	"github.com/LasTshaMAN/streaming/internal/redis"
 )
 
 // TODO
@@ -38,62 +37,65 @@ func main() {
 	}
 
 	const (
-		l3RequestTimeout      = 5 * time.Second
-		l3CircuitBreakerTimeout = 60 * time.Second
+		inetRequestTimeout        = 5 * time.Second
+		inetDataUnavailablePeriod = 10 * time.Second
 
-
-		redisConnCount = 16
-		redisDialTimeout = time.Second
-		redisRequestTimeout = time.Second
+		redisConnCount       = 16
+		redisDialTimeout     = time.Second
+		redisRequestTimeout  = time.Second
 		redisIdleConnTimeout = 10 * time.Minute
 
 		l2CodeExecutionUpperEstimate = time.Second
 
-		lockerSize = 100
+		lockerSize = 1
+		//lockerSize = 100
 	)
 
-	redisClient := redis.NewClient(
-		"localhost:6379",
-		0,
-		redisDialTimeout,
-		redisRequestTimeout,
-		redisRequestTimeout,
-		redisConnCount,
-		redisConnCount,
-		redisIdleConnTimeout,
-	)
-	defer func() {
-		err := redisClient.Close()
-		if err != nil {
-			_ = level.Error(logger).Log("err", fmt.Errorf("close Redis client, err: %w", err))
-		}
-	}()
+	//redisClient := redis.NewClient(
+	//	"localhost:6379",
+	//	0,
+	//	redisDialTimeout,
+	//	redisRequestTimeout,
+	//	redisRequestTimeout,
+	//	redisConnCount,
+	//	redisConnCount,
+	//	redisIdleConnTimeout,
+	//)
+	//defer func() {
+	//	err := redisClient.Close()
+	//	if err != nil {
+	//		_ = level.Error(logger).Log("err", fmt.Errorf("close Redis client, err: %w", err))
+	//	}
+	//}()
+	//
+	//redisStorage := redis.NewStorage(redisClient)
+	//
+	//// We need to make sure distributed lock won't expire before the protected section of code finishes its execution.
+	//// Also, we don't want distributed lock to be held for longer than necessary (cause that might affect service availability).
+	//// Thus, we are defining dLockExpiry below based on these considerations.
+	//dLockExpiry :=  l2CodeExecutionUpperEstimate +
+	//	redisDialTimeout + redisRequestTimeout +
+	//	inetRequestTimeout +
+	//	redisDialTimeout + redisRequestTimeout
+	//
+	//locker := redis.NewLocker(lockerSize, dLockExpiry, redisClient)
 
-	redisStorage := redis.NewStorage(redisClient)
+	inetClient := resty.NewWithClient(&http.Client{Timeout: inetRequestTimeout})
 
-	// We need to make sure distributed lock won't expire before the protected section of code finishes its execution.
-	// Also, we don't want distributed lock to be held for longer than necessary (cause that might affect service availability).
-	// Thus, we are defining dLockExpiry below based on these considerations.
-	dLockExpiry :=  l2CodeExecutionUpperEstimate +
-		redisDialTimeout + redisRequestTimeout +
-		l3RequestTimeout +
-		redisDialTimeout + redisRequestTimeout
+	// TODO
+	inetSimpleProvider := internet.NewSimpleProvider(logger, cfg.MinTimeout, cfg.MaxTimeout, inetDataUnavailablePeriod, inetClient)
+	//inetProvider := internet.NewSimpleProvider(logger, cfg.MinTimeout, cfg.MaxTimeout, inetDataUnavailablePeriod, inetClient)
 
-	locker := redis.NewLocker(lockerSize, dLockExpiry, redisClient)
-
-	l3Client := resty.NewWithClient(&http.Client{Timeout: l3RequestTimeout})
-
-	l3Provider := provider.NewL3(cfg.MinTimeout, cfg.MaxTimeout, l3Client, l3CircuitBreakerTimeout)
-
-	l2Provider := provider.NewL2(logger, redisStorage, locker, l3Provider)
+	//l2Provider := provider.NewL2(logger, redisStorage, locker, inetProvider)
 
 	//inmemStorage :=
 	//
-	//l1Provider := provider.NewL1(, l2Provider, l3RequestTimeout, redisDialTimeout + redisRequestTimeout)
+	//l1Provider := provider.NewL1(, l2Provider, inetRequestTimeout, redisDialTimeout + redisRequestTimeout)
 
 	// TODO
-	//randProvider := random.NewService(cfg.URLs, l3Provider)
-	randProvider := random.NewService(cfg.URLs, l2Provider)
+	randProvider := random.NewService(cfg.URLs, inetSimpleProvider)
+	//randProvider := random.NewService(cfg.URLs, inetProvider)
+	//randProvider := random.NewService(cfg.URLs, l2Provider)
 	//randProvider := random.NewService(cfg.URLs, l1Provider)
 
 	server := api.NewServer(logger, cfg.NumberOfRequests, randProvider)

@@ -14,6 +14,15 @@ test:
 # TODO
 mock_gen:
 
+client_run:
+	go run ./cmd/client
+
+# TODO
+# Rewrite this with docker-compose
+# TODO
+# (and check how that affects throughput)
+server_run_docker:
+	go run ./cmd/server
 
 proto_gen:
 	protoc \
@@ -22,12 +31,9 @@ proto_gen:
 	./streaming.proto
 
 # Spin up all the dependencies.
-up:
+deps_up:
 	docker-compose -f docker/docker-compose.yml up -d --build
 
 # Shut down all the dependencies.
-down:
+deps_down:
 	docker-compose -f docker/docker-compose.yml down
-
-# TODO
-# write docker-compose for spinning up multiple server instances (and check how that affects throughput)

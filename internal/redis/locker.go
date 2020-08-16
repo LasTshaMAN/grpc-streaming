@@ -13,7 +13,7 @@ type Locker struct {
 	pool *redis.Pool
 
 	locks []*redsync.Mutex
-	size int
+	size  int
 
 	hasher maphash.Hash
 }
@@ -27,9 +27,9 @@ func NewLocker(size int, lockExpiry time.Duration, pool *redis.Pool) *Locker {
 	}
 
 	return &Locker{
-		pool: pool,
+		pool:  pool,
 		locks: locks,
-		size: size,
+		size:  size,
 	}
 }
 
@@ -45,11 +45,11 @@ func (locker *Locker) Unlock(url string) (bool, error) {
 	return lock.Unlock()
 }
 
-func (locker *Locker)  getLock(url string) *redsync.Mutex {
+func (locker *Locker) getLock(url string) *redsync.Mutex {
 	_, _ = locker.hasher.WriteString(url)
 	defer locker.hasher.Reset()
 
 	hash := locker.hasher.Sum64()
 
-	return locker.locks[hash % uint64(locker.size)]
+	return locker.locks[hash%uint64(locker.size)]
 }
