@@ -42,6 +42,9 @@ make test
 
 To deploy [server](./cmd/server) locally with `docker-compose` do:
 ```
+# Spin up service dependencies (for example, Redis) first:
+make up_deps
+
 make run_server
 ```
 
