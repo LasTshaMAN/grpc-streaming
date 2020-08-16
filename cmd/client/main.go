@@ -25,7 +25,6 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
-	// TODO
 	//const desiredConnectionsCnt = 10000
 	const desiredConnectionsCnt = 1000
 	//const desiredConnectionsCnt = 10

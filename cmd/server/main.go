@@ -38,9 +38,6 @@ func main() {
 		return
 	}
 
-	// TODO
-	// rename all l1 and l2
-
 	const (
 		inetRequestTimeout        = 5 * time.Second
 		inetDataUnavailablePeriod = 60 * time.Second
@@ -51,10 +48,8 @@ func main() {
 		redisRequestTimeout  = time.Second
 		redisIdleConnTimeout = 10 * time.Minute
 
-		// TODO
-		l2CodeExecutionUpperEstimate = 109 * time.Second
+		redisInetProxyCodeExecutionUpperEstimate = 1 * time.Second
 
-		// TODO
 		//lockerSize = 1
 		lockerSize = 100
 	)
@@ -81,7 +76,7 @@ func main() {
 	// We need to make sure distributed lock won't expire before the protected section of code finishes its execution.
 	// Also, we don't want distributed lock to be held for longer than necessary (cause that might affect service availability).
 	// Thus, we are defining dLockExpiry below based on these considerations.
-	dLockExpiry := l2CodeExecutionUpperEstimate +
+	dLockExpiry := redisInetProxyCodeExecutionUpperEstimate +
 		redisDialTimeout + redisRequestTimeout +
 		inetRequestTimeout +
 		redisDialTimeout + redisRequestTimeout

@@ -56,6 +56,7 @@ make run_client
 See [Makefile](./Makefile) for the full list of available commands.
 
 ### Things yet to be done ...
+- fix all TODOs in this project
 - fix linter suggestions
 - overall architecture documentation
 - metrics
