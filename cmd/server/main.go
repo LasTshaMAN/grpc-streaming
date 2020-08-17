@@ -21,9 +21,6 @@ import (
 	"github.com/LasTshaMAN/streaming/internal/redis"
 )
 
-// TODO
-// check that all parameters in funcs makes sense
-
 func main() {
 	var logger log.Logger
 	{
@@ -40,10 +37,10 @@ func main() {
 
 	const (
 		inetRequestTimeout        = 5 * time.Second
-		inetDataUnavailablePeriod = 60 * time.Second
+		inetDataUnavailablePeriod = 10 * time.Second
 
-		//redisConnCount       = 16
-		redisConnCount       = 1
+		//redisConnCount       = 1
+		redisConnCount       = 16
 		redisDialTimeout     = time.Second
 		redisRequestTimeout  = time.Second
 		redisIdleConnTimeout = 10 * time.Minute
@@ -85,7 +82,6 @@ func main() {
 
 	inetClient := resty.NewWithClient(&http.Client{Timeout: inetRequestTimeout})
 
-	// TODO
 	//inetSimpleProvider := internet.NewSimpleProvider(logger, cfg.MinTimeout, cfg.MaxTimeout, inetDataUnavailablePeriod, inetClient)
 	inetProvider := internet.NewProvider(logger, cfg.MinTimeout, cfg.MaxTimeout, inetDataUnavailablePeriod, inetClient)
 
@@ -144,10 +140,9 @@ func main() {
 	//
 	//inmemRedisProxy := provider.NewProxy(, redisInetProxy, inetRequestTimeout, redisDialTimeout + redisRequestTimeout)
 
-	// TODO
-	//randProvider := random.NewService(cfg.URLs, inetSimpleProvider)
-	//randProvider := random.NewService(cfg.URLs, inmemRedisProxy)
+	//randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, inetSimpleProvider))
 	randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, redisInetProxy))
+	//randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, inmemRedisProxy))
 
 	server := api.NewServer(logger, cfg.NumberOfRequests, randProvider)
 

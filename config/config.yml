@@ -8,6 +8,6 @@ URLs:
   - https://www.atlasian.com
   - https://www.twitter.com
   - https://www.facebook.com
-MinTimeout: 100s
+MinTimeout: 10s
 MaxTimeout: 100s
 NumberOfRequests: 3

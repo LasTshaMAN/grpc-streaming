@@ -3,12 +3,11 @@
 Table of contents:
 
 - [Architecture](docs/architecture.md)
-TODO
 - [Dependencies](#dependencies)
 - [How to run](#how-to-run)
 - [Things yet to be done](#things-yet-to-be-done-)
 
-This project is an experimental ground for GRPC streaming.
+This project is an experimental ground for GRPC streaming (possibly distributed systems and concurrency management).
 
 ## Dependencies
 
@@ -48,20 +47,22 @@ make up_deps
 make run_server
 ```
 
-You can also run a [client](./cmd/client) to send some requests to the server (check out [logs](./logs) to see what happens):
+You can also run a [client](./cmd/client) to send some requests to the server:
 ```
 make run_client
 ```
 
+Check out [logs](./logs) dir to see [client](./cmd/client) and [server](./cmd/server) outputs.
+
 See [Makefile](./Makefile) for the full list of available commands.
 
 ### Things yet to be done ...
-- fix all TODOs in this project
-- fix linter suggestions
+- TODOs in this project
+- linter suggestions
 - overall architecture documentation
 - metrics
 - extend unit-test coverage (especially for edge and error cases)
 - tracing
-- move all the settings (such as timeouts, amount of connections, locks, ...) in the configuration file
+- move all the settings (such as timeouts, amount of connections, locks configuration, ...) in the configuration file
 - customize timeouts according to our needs
 - setup CI/CD

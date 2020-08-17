@@ -89,7 +89,7 @@ func main() {
 // before returning this func spawns a background worker to handle the data stream coming on this connection.
 // This background worker terminates upon a first error encountered.
 func connect(ctx context.Context, target string, logger log.Logger) (firstReplySuccess bool, err error) {
-	ctx, cancel := context.WithTimeout(ctx, 1 * time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5 * time.Second)
 	
 	conn, err := grpc.DialContext(ctx, target, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {

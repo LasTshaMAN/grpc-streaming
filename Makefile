@@ -14,7 +14,7 @@ lint_docker:
 test:
 	go test ./... -race -timeout 60s -count=1 -cover -coverprofile=coverage.txt && go tool cover -func=coverage.txt
 
-# TODO
+# TODO - try https://github.com/matryer/moq is action for mocks
 mock_gen:
 
 run_client:
@@ -22,8 +22,7 @@ run_client:
 	rm -f ./log/client.log 2>&1
 	go run ./cmd/client >> ./log/client.log 2>&1
 
-# TODO
-# (and check how docker compose affects throughput)
+# TODO - scale server with docker-compose and see how that affects throughput
 run_server:
 	rm -f ./log/server.log 2>&1
 	mkdir -p log
