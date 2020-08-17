@@ -10,3 +10,7 @@ RUN go mod download
 
 COPY . .
 RUN make build
+
+# TODO
+# Copy to fresh image to keep final image small and secure.
+#FROM scratch
