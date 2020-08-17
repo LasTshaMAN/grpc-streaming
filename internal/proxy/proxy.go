@@ -15,7 +15,7 @@ import (
 type Proxy struct {
 	logger log.Logger
 
-	storage streaming.DataStorage
+	storage streaming.TempDataStorage
 
 	locker streaming.Locker
 
@@ -37,7 +37,7 @@ type Proxy struct {
 
 func NewProxy(
 	logger log.Logger,
-	storage streaming.DataStorage,
+	storage streaming.TempDataStorage,
 	locker streaming.Locker,
 	fallback streaming.DataProvider,
 	adjustTTL func(fallbackTTL time.Duration) time.Duration,
