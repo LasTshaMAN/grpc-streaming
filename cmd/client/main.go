@@ -89,6 +89,8 @@ func main() {
 // before returning this func spawns a background worker to handle the data stream coming on this connection.
 // This background worker terminates upon a first error encountered.
 func connect(ctx context.Context, target string, logger log.Logger) (firstReplySuccess bool, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 1 * time.Second)
+	
 	conn, err := grpc.DialContext(ctx, target, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return false, fmt.Errorf("dial target, err: %w", err)
@@ -114,6 +116,8 @@ func connect(ctx context.Context, target string, logger log.Logger) (firstReplyS
 	// At this point - consider the connection to be successfully established.
 
 	go func() {
+		defer cancel()
+
 		process(stream, logger)
 
 		closeErr := conn.Close()
