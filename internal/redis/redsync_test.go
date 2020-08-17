@@ -1,6 +1,7 @@
 package redis_test
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -12,10 +13,9 @@ import (
 )
 
 func TestRedSync(t *testing.T) {
-	t.Run("redsync must implement block-wait semantics, not try-error semantics", func(t *testing.T) {
-		// We want to make sure redsync will block when mutex is occupied by other actors instead of returning an error.
-		// This behavior is not described in their docs,
-		// and it is faster to check it ourselves (in a test like this) than to dig through implementation.
+	t.Run("redsync must not block forever", func(t *testing.T) {
+		// We want to make sure redsync Lock will not block an actor on mutex forever when mutex is not available.
+		// This behavior is not described in their docs.
 
 		client := redis.NewClient(
 			"localhost:6379",
@@ -28,30 +28,35 @@ func TestRedSync(t *testing.T) {
 			time.Minute,
 		)
 
-		lock := redsync.New([]redsync.Pool{client}).NewMutex("some mutex", redsync.SetExpiry(time.Minute))
+		lock := redsync.New([]redsync.Pool{client}).NewMutex(
+			"some mutex",
+			redsync.SetExpiry(time.Minute),
+			redsync.SetTries(1),
+			redsync.SetRetryDelay(time.Millisecond),
+		)
 
-		f := func() {
-			err := lock.Lock()
-			assert.Nil(t, err)
-
-			defer func() {
-				success, unlockErr := lock.Unlock()
-				assert.Nil(t, unlockErr)
-				assert.True(t, success)
-			}()
-
-			time.Sleep(time.Millisecond)
-		}
+		err := lock.Lock()
+		assert.Nil(t, err, err)
 
 		wg := sync.WaitGroup{}
 
 		for i := 0; i < 100; i++ {
 			wg.Add(1)
 			go func() {
-				f()
+				err := lock.Lock()
+
+				assert.True(t, errors.Is(err, redsync.ErrFailed), err)
+
 				wg.Done()
 			}()
 		}
+
+		// Occupy lock for a long time.
+		time.Sleep(100 * time.Millisecond)
+
+		success, unlockErr := lock.Unlock()
+		assert.Nil(t, unlockErr)
+		assert.True(t, success)
 
 		wg.Wait()
 	})
