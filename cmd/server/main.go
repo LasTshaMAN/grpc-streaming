@@ -36,7 +36,7 @@ func main() {
 	}
 
 	const (
-		inetRequestTimeout        = 5 * time.Second
+		inetRequestTimeout        = 2 * time.Second
 		inetDataUnavailablePeriod = 10 * time.Second
 
 		//redisConnCount       = 1
@@ -90,50 +90,58 @@ func main() {
 	//	redisStorage,
 	//	locker,
 	//	inetSimpleProvider,
-	//	// TODO
 	//	func(fallbackTTL time.Duration) time.Duration {
-	//		return fallbackTTL
+	//		const (
+	//			// fallbackRoundTripTime is an upper estimate on the time it takes to fetch data from fallback provider.
+	//			fallbackRoundTripTime = inetRequestTimeout
+	//
+	//			// storageRoundTripTime is an upper estimate on the time it takes to write data to storage.
+	//			storageRoundTripTime = redisDialTimeout + redisRequestTimeout
+	//
+	//			// proxyCodeExecutionUpperEstimate estimates the time it takes to execute some code in proxy.Proxy,
+	//			// we need it because while we are executing this code fallbackTTL value is getting even more out of date.
+	//			//
+	//			// This value is pretty much arbitrary, and might be adjusted in the future according to our needs.
+	//			proxyCodeExecutionUpperEstimate = 100 * time.Millisecond
+	//		)
+	//
+	//		result := fallbackTTL - fallbackRoundTripTime - storageRoundTripTime - proxyCodeExecutionUpperEstimate
+	//
+	//		if result < 0 {
+	//			return 0
+	//		}
+	//
+	//		return result
 	//	},
-	//	//func(fallbackTTL time.Duration) time.Duration {
-	//	//	// proxyCodeExecutionUpperEstimate estimates an adjustment for the code execution,
-	//	//	// we need it because while we are executing code in this Proxy fallbackTTL is getting even more out of date.
-	//	//	//
-	//	//	// This value is pretty much arbitrary, and might be adjusted in the future according to our needs.
-	//	//	const proxyCodeExecutionUpperEstimate = 100 * time.Millisecond
-	//	//
-	//	//	result := fallbackTTL - inetRequestTimeout - (redisDialTimeout + redisRequestTimeout) - proxyCodeExecutionUpperEstimate
-	//	//
-	//	//	if result < 0 {
-	//	//		return 0
-	//	//	}
-	//	//
-	//	//	return result
-	//	//},
 	//)
 	redisInetProxy := proxy.NewProxy(
 		logger,
 		redisStorage,
 		locker,
 		inetProvider,
-		// TODO
 		func(fallbackTTL time.Duration) time.Duration {
-			return fallbackTTL
+			const (
+				// fallbackRoundTripTime is an upper estimate on the time it takes to fetch data from fallback provider.
+				fallbackRoundTripTime = inetRequestTimeout
+
+				// storageRoundTripTime is an upper estimate on the time it takes to write data to storage.
+				storageRoundTripTime = redisDialTimeout + redisRequestTimeout
+
+				// proxyCodeExecutionUpperEstimate estimates the time it takes to execute some code in proxy.Proxy,
+				// we need it because while we are executing this code fallbackTTL value is getting even more out of date.
+				//
+				// This value is pretty much arbitrary, and might be adjusted in the future according to our needs.
+				proxyCodeExecutionUpperEstimate = 100 * time.Millisecond
+			)
+
+			result := fallbackTTL - fallbackRoundTripTime - storageRoundTripTime - proxyCodeExecutionUpperEstimate
+
+			if result < 0 {
+				return 0
+			}
+
+			return result
 		},
-		//func(fallbackTTL time.Duration) time.Duration {
-		//	// proxyCodeExecutionUpperEstimate estimates an adjustment for the code execution,
-		//	// we need it because while we are executing code in this Proxy fallbackTTL is getting even more out of date.
-		//	//
-		//	// This value is pretty much arbitrary, and might be adjusted in the future according to our needs.
-		//	const proxyCodeExecutionUpperEstimate = 100 * time.Millisecond
-		//
-		//	result := fallbackTTL - inetRequestTimeout - (redisDialTimeout + redisRequestTimeout) - proxyCodeExecutionUpperEstimate
-		//
-		//	if result < 0 {
-		//		return 0
-		//	}
-		//
-		//	return result
-		//},
 	)
 
 	//inmemStorage :=

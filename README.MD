@@ -57,12 +57,13 @@ Check out [logs](./logs) dir to see [client](./cmd/client) and [server](./cmd/se
 See [Makefile](./Makefile) for the full list of available commands.
 
 ### Things yet to be done ...
-- TODOs in this project
-- linter suggestions
-- overall architecture documentation
-- metrics
+- finish all TODOs in this project
+- fix linter suggestions
+- write overall architecture documentation
+- add metrics
 - extend unit-test coverage (especially for edge and error cases)
-- tracing
+- add tracing (based on Jaeger ?)
 - move all the settings (such as timeouts, amount of connections, locks configuration, ...) in the configuration file
 - customize timeouts according to our needs
 - setup CI/CD
+- remove all commented out (and dead) code that I'm currently experimenting with

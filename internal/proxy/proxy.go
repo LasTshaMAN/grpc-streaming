@@ -20,6 +20,7 @@ type Proxy struct {
 	locker streaming.Locker
 
 	fallback streaming.DataProvider
+
 	// adjustTTL based on different factors (these factors are defined by the user of this struct -> hence this is a func).
 	//
 	// Fallback provider returns a ttl (time to live) for the data it provides.
@@ -32,18 +33,6 @@ type Proxy struct {
 	// this ttl value is already stale.
 	// That's why we need to adjust the ttl value (to avoid serving stale data) fallback provider returns.
 	adjustTTL func(fallbackTTL time.Duration) time.Duration
-
-	// TODO
-	// we don't need these vars below in this struct, move their descriptions in the appropriate place
-	//
-	// fallbackRoundTripTime is an upper estimate on the time it takes to fetch data from fallback provider.
-	//
-	// fallbackRoundTripTime is an upper bound on the difference between ttl calculated by fallback provider and
-	// ttl that is remaining when we get back fallback provider.
-	fallbackRoundTripTime time.Duration
-	// fallbackRoundTripTime is an upper estimate on the time it takes to write data to storage.
-	// It is used in a similar way to how fallbackRoundTripTime is used.
-	storageRoundTripTime time.Duration
 }
 
 func NewProxy(
@@ -108,6 +97,8 @@ func (srv *Proxy) Get(ctx context.Context, url string) (string, time.Duration, e
 	}
 
 	if errors.Is(err, streaming.ErrDataCurrentlyUnavailable) {
+		// We are caching "temporary unavailable" error response for efficiency / performance reasons.
+
 		ttl = srv.adjustTTL(ttl)
 
 		setErr := srv.storage.Set(ctx, url, dataUnavailableMarker, ttl)
