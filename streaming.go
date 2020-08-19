@@ -27,7 +27,7 @@ type DataProvider interface {
 }
 
 // TempDataStorage provides key-value storage to store the data this service works with.
-// It is a "temporary" storage, meaning that whatever we store in it has an expiration time and 
+// It is a "temporary" storage, meaning that whatever we store in it has an expiration time and
 // will disappear from storage after this time elapses.
 //
 // TempDataStorage can be safely used concurrently from multiple go-routines.

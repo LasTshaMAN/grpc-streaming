@@ -15,6 +15,7 @@ import (
 	gengrpc "github.com/LasTshaMAN/streaming/gen/grpc"
 	"github.com/LasTshaMAN/streaming/internal/api"
 	"github.com/LasTshaMAN/streaming/internal/config"
+	"github.com/LasTshaMAN/streaming/internal/inmemory"
 	"github.com/LasTshaMAN/streaming/internal/internet"
 	"github.com/LasTshaMAN/streaming/internal/proxy"
 	"github.com/LasTshaMAN/streaming/internal/random"
@@ -36,7 +37,7 @@ func main() {
 	}
 
 	const (
-		inetRequestTimeout        = 2 * time.Second
+		inetRequestTimeout        = 5 * time.Second
 		inetDataUnavailablePeriod = 10 * time.Second
 
 		//redisConnCount       = 1
@@ -47,8 +48,10 @@ func main() {
 
 		redisInetProxyCodeExecutionUpperEstimate = 1 * time.Second
 
-		//lockerSize = 1
-		lockerSize = 100
+		//redisLockerSize = 1
+		redisLockerSize = 100
+		//inmemLockerSize = 1
+		inmemLockerSize = 100
 	)
 
 	redisClient := redis.NewClient(
@@ -78,7 +81,7 @@ func main() {
 		inetRequestTimeout +
 		redisDialTimeout + redisRequestTimeout
 
-	locker := redis.NewLocker(lockerSize, dLockExpiry, redisClient)
+	redisLocker := redis.NewLocker(redisLockerSize, dLockExpiry, redisClient)
 
 	inetClient := resty.NewWithClient(&http.Client{Timeout: inetRequestTimeout})
 
@@ -88,7 +91,7 @@ func main() {
 	//redisInetProxy := proxy.NewProxy(
 	//	logger,
 	//	redisStorage,
-	//	locker,
+	//	redisLocker,
 	//	inetSimpleProvider,
 	//	func(fallbackTTL time.Duration) time.Duration {
 	//		const (
@@ -117,7 +120,7 @@ func main() {
 	redisInetProxy := proxy.NewProxy(
 		logger,
 		redisStorage,
-		locker,
+		redisLocker,
 		inetProvider,
 		func(fallbackTTL time.Duration) time.Duration {
 			const (
@@ -144,13 +147,43 @@ func main() {
 		},
 	)
 
-	//inmemStorage :=
-	//
-	//inmemRedisProxy := provider.NewProxy(, redisInetProxy, inetRequestTimeout, redisDialTimeout + redisRequestTimeout)
+	inmemLocker := inmemory.NewLocker(logger, inmemLockerSize)
+
+	inmemStorage := inmemory.NewStorage(time.Now)
+
+	inmemRedisProxy := proxy.NewProxy(
+		logger,
+		inmemStorage,
+		inmemLocker,
+		redisInetProxy,
+		func(fallbackTTL time.Duration) time.Duration {
+			const (
+				// fallbackRoundTripTime is an upper estimate on the time it takes to fetch data from fallback provider.
+				fallbackRoundTripTime = redisDialTimeout + redisRequestTimeout
+
+				// storageRoundTripTime is an upper estimate on the time it takes to write data to storage.
+				storageRoundTripTime = 1 * time.Millisecond
+
+				// proxyCodeExecutionUpperEstimate estimates the time it takes to execute some code in proxy.Proxy,
+				// we need it because while we are executing this code fallbackTTL value is getting even more out of date.
+				//
+				// This value is pretty much arbitrary, and might be adjusted in the future according to our needs.
+				proxyCodeExecutionUpperEstimate = 10 * time.Millisecond
+			)
+
+			result := fallbackTTL - fallbackRoundTripTime - storageRoundTripTime - proxyCodeExecutionUpperEstimate
+
+			if result < 0 {
+				return 0
+			}
+
+			return result
+		},
+	)
 
 	//randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, inetSimpleProvider))
-	randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, redisInetProxy))
-	//randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, inmemRedisProxy))
+	//randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, redisInetProxy))
+	randProvider := random.NewLoggingMiddleware(logger, random.NewService(cfg.URLs, inmemRedisProxy))
 
 	server := api.NewServer(logger, cfg.NumberOfRequests, randProvider)
 

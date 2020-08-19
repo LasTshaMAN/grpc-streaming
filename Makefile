@@ -23,7 +23,7 @@ run_client:
 	go run ./cmd/client >> ./log/client.log 2>&1
 
 # TODO - scale server with docker-compose and see how that affects throughput
-run_server:
+start_server:
 	rm -f ./log/server.log 2>&1
 	mkdir -p log
 	docker-compose -p server -f docker/docker-compose-server.yml up -d --build
