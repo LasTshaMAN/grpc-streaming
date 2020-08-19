@@ -15,7 +15,8 @@ type Locker struct {
 	locks []*redsync.Mutex
 	size  int
 
-	hasher maphash.Hash
+	// hSeed is a seed used for hashing algorithm to hash URLs.
+	hSeed maphash.Seed
 }
 
 func NewLocker(size int, lockExpiry time.Duration, pool *redis.Pool) *Locker {
@@ -30,6 +31,7 @@ func NewLocker(size int, lockExpiry time.Duration, pool *redis.Pool) *Locker {
 		pool:  pool,
 		locks: locks,
 		size:  size,
+		hSeed: maphash.MakeSeed(),
 	}
 }
 
@@ -46,10 +48,13 @@ func (locker *Locker) Unlock(url string) (bool, error) {
 }
 
 func (locker *Locker) getLock(url string) *redsync.Mutex {
-	_, _ = locker.hasher.WriteString(url)
-	defer locker.hasher.Reset()
+	var h maphash.Hash
+	h.SetSeed(locker.hSeed)
 
-	hash := int(locker.hasher.Sum64() >> 33)
+	_, _ = h.WriteString(url)
+	defer h.Reset()
+
+	hash := int(h.Sum64() >> 33)
 
 	return locker.locks[hash%locker.size]
 }
