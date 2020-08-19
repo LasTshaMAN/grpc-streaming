@@ -147,7 +147,7 @@ func main() {
 		},
 	)
 
-	inmemLocker := inmemory.NewLocker(logger, inmemLockerSize)
+	inmemLocker := inmemory.NewLocker(inmemLockerSize)
 
 	inmemStorage := inmemory.NewStorage(time.Now)
 

@@ -3,14 +3,9 @@ package inmemory
 import (
 	"hash/maphash"
 	"sync"
-
-	"github.com/go-kit/kit/log"
 )
 
 type Locker struct {
-	// TODO
-	logger log.Logger
-
 	locks []*sync.Mutex
 	size  int
 
@@ -18,7 +13,7 @@ type Locker struct {
 	hSeed maphash.Seed
 }
 
-func NewLocker(logger log.Logger, size int) *Locker {
+func NewLocker(size int) *Locker {
 	locks := make([]*sync.Mutex, size)
 
 	for i := 0; i < size; i++ {
@@ -26,7 +21,6 @@ func NewLocker(logger log.Logger, size int) *Locker {
 	}
 
 	return &Locker{
-		logger: logger,
 		locks: locks,
 		size:  size,
 		hSeed: maphash.MakeSeed(),
@@ -34,9 +28,6 @@ func NewLocker(logger log.Logger, size int) *Locker {
 }
 
 func (locker *Locker) Lock(url string) error {
-	// TODO
-	//_ = level.Error(locker.logger).Log("err", fmt.Sprintf("(locker *Locker) Lock, url: %s", url))
-
 	lock := locker.getLock(url)
 
 	lock.Lock()
@@ -45,9 +36,6 @@ func (locker *Locker) Lock(url string) error {
 }
 
 func (locker *Locker) Unlock(url string) (bool, error) {
-	// TODO
-	//_ = level.Error(locker.logger).Log("err", fmt.Sprintf("(locker *Locker) Unlock, url: %s", url))
-
 	lock := locker.getLock(url)
 
 	lock.Unlock()
