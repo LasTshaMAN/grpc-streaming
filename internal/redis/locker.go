@@ -15,6 +15,15 @@ type Locker struct {
 	locks []*redsync.Mutex
 	size  int
 
+	// TODO
+	// In order to get the same hash for the same URL in two different processes (running this service)
+	// we need to use the same maphash.Seed.
+	// From maphash.Seed documentation:
+	//   ...
+	//   Each Seed value is local to a single process and cannot be serialized
+	//   or otherwise recreated in a different process.
+	// Thus we can't use maphash.Seed & maphash.Hash when running multiple instances of this service and need to move to find else.
+	//
 	// hSeed is a seed used for hashing algorithm to hash URLs.
 	hSeed maphash.Seed
 }
