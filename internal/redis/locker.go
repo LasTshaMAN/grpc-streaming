@@ -2,7 +2,7 @@ package redis
 
 import (
 	"fmt"
-	"hash/maphash"
+	"hash/fnv"
 	"time"
 
 	"github.com/go-redsync/redsync"
@@ -14,18 +14,6 @@ type Locker struct {
 
 	locks []*redsync.Mutex
 	size  int
-
-	// TODO
-	// In order to get the same hash for the same URL in two different processes (running this service)
-	// we need to use the same maphash.Seed.
-	// From maphash.Seed documentation:
-	//   ...
-	//   Each Seed value is local to a single process and cannot be serialized
-	//   or otherwise recreated in a different process.
-	// Thus we can't use maphash.Seed & maphash.Hash when running multiple instances of this service and need to move to find else.
-	//
-	// hSeed is a seed used for hashing algorithm to hash URLs.
-	hSeed maphash.Seed
 }
 
 func NewLocker(size int, lockExpiry time.Duration, pool *redis.Pool) *Locker {
@@ -40,7 +28,6 @@ func NewLocker(size int, lockExpiry time.Duration, pool *redis.Pool) *Locker {
 		pool:  pool,
 		locks: locks,
 		size:  size,
-		hSeed: maphash.MakeSeed(),
 	}
 }
 
@@ -57,13 +44,12 @@ func (locker *Locker) Unlock(url string) (bool, error) {
 }
 
 func (locker *Locker) getLock(url string) *redsync.Mutex {
-	var h maphash.Hash
-	h.SetSeed(locker.hSeed)
+	h := fnv.New64()
 
-	_, _ = h.WriteString(url)
+	_, _ = h.Write([]byte(url))
 	defer h.Reset()
 
-	hash := int(h.Sum64() >> 33)
+	hash := h.Sum64()
 
-	return locker.locks[hash%locker.size]
+	return locker.locks[hash%uint64(locker.size)]
 }

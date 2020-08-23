@@ -1,16 +1,13 @@
 package inmemory
 
 import (
-	"hash/maphash"
+	"hash/fnv"
 	"sync"
 )
 
 type Locker struct {
 	locks []*sync.Mutex
 	size  int
-
-	// hSeed is a seed used for hashing algorithm to hash URLs.
-	hSeed maphash.Seed
 }
 
 func NewLocker(size int) *Locker {
@@ -23,7 +20,6 @@ func NewLocker(size int) *Locker {
 	return &Locker{
 		locks: locks,
 		size:  size,
-		hSeed: maphash.MakeSeed(),
 	}
 }
 
@@ -44,13 +40,12 @@ func (locker *Locker) Unlock(url string) (bool, error) {
 }
 
 func (locker *Locker) getLock(url string) *sync.Mutex {
-	var h maphash.Hash
-	h.SetSeed(locker.hSeed)
+	h := fnv.New64()
 
-	_, _ = h.WriteString(url)
+	_, _ = h.Write([]byte(url))
 	defer h.Reset()
 
-	hash := int(h.Sum64() >> 33)
+	hash := h.Sum64()
 
-	return locker.locks[hash%locker.size]
+	return locker.locks[hash%uint64(locker.size)]
 }
