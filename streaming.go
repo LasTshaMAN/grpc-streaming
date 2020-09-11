@@ -19,6 +19,9 @@ type RandomDataProvider interface {
 // DataProvider can be safely used concurrently from multiple go-routines.
 type DataProvider interface {
 	// Get returns data identified by url, with a certain ttl (time to live) duration after which this data is considered to be stale.
+	// Note, we are using ttl durations instead of timestamps because in general timestamps are not synchronized between 
+	// services in a distributed system (and clock drift is a real thing - https://en.wikipedia.org/wiki/Clock_drift),
+	// so we can't compare timestamp1 obtained on service1 with timestamp2 obtained on service2.
 	//
 	// When ErrDataCurrentlyUnavailable is returned, ttl might have non-zero value,
 	// in this case provider will continue to return ErrDataCurrentlyUnavailable for ttl duration
